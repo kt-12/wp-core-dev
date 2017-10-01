@@ -9,7 +9,7 @@ cache:
     - $HOME/.composer/cache
 env:
   global:
-    - WP_TRAVISCI=travis:phpunit
+    - WP_TRAVISCI=travis:phpunit --group 42040
 matrix:
   include:
   - php: 7.1
