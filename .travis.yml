@@ -102,9 +102,7 @@ before_script:
 - svn --version
 - locale -a
 
-- phpunit --group 42040
-
-#script: grunt $WP_TRAVISCI
+script: grunt $WP_TRAVISCI --group 42040
 
 notifications:
   slack:
