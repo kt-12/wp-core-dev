@@ -395,6 +395,115 @@ class Tests_DB extends WP_UnitTestCase {
 		$this->assertEquals( "SELECT * FROM $wpdb->users WHERE id = 0 AND user_login = 'admin'", $prepared );
         }
 
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_more_args_case1()
+	    {
+		global $wpdb;
+
+		// when coma seperated arguments are passed
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d AND user_login = %s", 1, "admin", "extra-arg");
+		$this->assertEquals("SELECT * FROM $wpdb->users WHERE id = 1 AND user_login = 'admin'", $prepared);
+	    }
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_more_args_case2()
+	    {
+		global $wpdb;
+		
+		// when argument is passed as an array
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d AND user_login = %s", array( 1,"admin", "extra-arg"));
+		$this->assertEquals("SELECT * FROM $wpdb->users WHERE id = 1 AND user_login = 'admin'", $prepared);
+	     }
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_more_args_case3()
+	    {
+		global $wpdb;
+
+		// case to check if it ignores %%
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d AND %% AND user_login = %s", 1, "admin", "extra-arg");
+		$this->assertEquals("SELECT * FROM $wpdb->users WHERE id = 1 AND % AND user_login = 'admin'", $prepared);
+
+	     } 
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_more_args_case4()
+	    {
+		global $wpdb;
+
+		//case with multiple patterns clubbed together and also Testing %F pattern detection
+		// Note: Floats getting converted to 6 decimal place after - which is not 42040 patch is about
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %%%d AND %F AND %f AND user_login = %s", 1, 2.3, "4.5", "admin", "extra-arg");
+		$this->assertEquals("SELECT * FROM wptests_users WHERE id = %1 AND 2.300000 AND 4.500000 AND user_login = 'admin'", $prepared);
+
+	    } 
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_more_args_double_notice()
+	    {
+		global $wpdb;
+
+		//case with double IncorrectUsage
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d AND user_login = %s", array( 1 ), "admin", "extra-arg");
+		$this->assertEquals("SELECT * FROM $wpdb->users WHERE id = 0 AND user_login = 'admin'", $prepared);
+
+	    }
+
+
+
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_less_args_case1()
+	    {
+		global $wpdb;
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d and user_nicename = %s and user_status =%d and user_login = %s", 1, "admin", 0);
+		$this->assertEquals("", $prepared);
+
+	     }
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_less_args_case2()
+	    {
+		global $wpdb;
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d and user_nicename = %s and user_status =%d and user_login = %s", array( 1,"admin", 0 ));
+		$this->assertEquals("", $prepared);
+	     }
+
+	    /**
+	     * @ticket 42040
+	     * @expectedIncorrectUsage wpdb::prepare
+	     */
+	    public function test_prepare_invalid_args_count_less_args_case3()
+	    {
+		global $wpdb;
+		$prepared = @$wpdb->prepare("SELECT * FROM $wpdb->users WHERE id = %d and %% and user_login = %s and user_status =%d and user_login = %s", 1, "admin", "extra-arg");
+		$this->assertEquals("", $prepared);
+
+	    }
+
+
 	function test_db_version() {
 		global $wpdb;
 

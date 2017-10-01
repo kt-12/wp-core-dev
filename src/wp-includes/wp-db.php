@@ -1252,6 +1252,30 @@ class wpdb {
 		$query = preg_replace( '|(?<!%)%s|', "'%s'", $query ); // quote the strings, avoiding escaped strings like %%s
 		$query = preg_replace( '/%(?:%|$|([^dsF]))/', '%%\\1', $query ); // escape any unescaped percents 
 		array_walk( $args, array( $this, 'escape_by_ref' ) );
+
+		/**
+		* Patch to find number of convertible patterns in the query and match it to the arguments count
+		* Throw a notice if there is a mismatch in the number of covertible patterns to the argument count passed in
+		* I recommend exception over notice but keeping backward compatibility in mind, i have used notice. 		
+		*/
+
+		preg_match_all('/%(%|s|d|F)/', $query, $patterns, PREG_SET_ORDER, 0);  // search for %% %s %d %F  in the string
+        	$convertible_pattern_count = 0;
+
+        	foreach ( $patterns as $pattern ) {
+            		if (strcmp($pattern[0][1], "%")) {             // as % is a escape pattern, ignore %% form the list of convertible pattern
+                		$convertible_pattern_count++;
+            		}
+	        }
+
+        	if ( count( $args ) != $convertible_pattern_count ) {
+            		_doing_it_wrong(
+                		'wpdb::prepare',
+                		sprintf('Number of argument passed is incorrect. Requires %d arguments, but %d arguments is passed', $convertible_pattern_count, count($args)),
+                		'4.8.2' //version needs to be updated accordingly
+            		);
+        	}
+
 		return @vsprintf( $query, $args );
 	}
 
